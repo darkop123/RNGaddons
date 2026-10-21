@@ -26,6 +26,13 @@ final class DiceDetector {
 		return null;
 	}
 
+	/** For the log: what the item says about itself (id from custom_data, or "none"). */
+	static String describe(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) return "empty hand";
+		String id = readSkyblockId(stack);
+		return "name='" + stack.getHoverName().getString() + "', id=" + (id.isEmpty() ? "none" : id);
+	}
+
 	private static String readSkyblockId(ItemStack stack) {
 		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
 		if (data == null) return "";

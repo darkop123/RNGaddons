@@ -106,6 +106,9 @@ public final class ArchfiendSlotsClient implements ClientModInitializer {
 			// The event is global; in singleplayer it also fires for the server-side player. Only react to ours.
 			if (player != mc.player) return InteractionResult.PASS;
 			DiceType type = DiceDetector.detect(player.getItemInHand(hand), controller.settings().allowNameFallback);
+			if (controller.settings().debugLogMessages) {
+				LOG.info("Item use: {} -> {}", DiceDetector.describe(player.getItemInHand(hand)), type);
+			}
 			if (type != null) {
 				renderFailed = false; // a rendering error must never disable the overlay for good
 				controller.onItemUse(type, now());
