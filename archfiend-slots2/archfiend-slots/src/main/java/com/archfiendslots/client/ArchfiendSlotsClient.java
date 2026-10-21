@@ -51,6 +51,7 @@ public final class ArchfiendSlotsClient implements ClientModInitializer {
 	private final Gfx gfx = new Gfx();
 	private final SoundController sound = new SoundController();
 	private boolean renderFailed;
+	private boolean useWasDown;
 
 	private static long now() {
 		return System.nanoTime() / 1_000_000L; // monotonic
@@ -127,6 +128,18 @@ public final class ArchfiendSlotsClient implements ClientModInitializer {
 				abortAll();
 				return;
 			}
+			// Second, independent trigger: the right-click key itself. Other mods can swallow UseItemCallback,
+			// so we also watch the key going down while a dice is held. onItemUse ignores a second start.
+			boolean useDown = mc.options.keyUse.isDown();
+			if (useDown && !useWasDown && mc.screen == null) {
+				DiceType held = DiceDetector.detect(mc.player.getMainHandItem(), controller.settings().allowNameFallback);
+				if (held == null) held = DiceDetector.detect(mc.player.getOffhandItem(), controller.settings().allowNameFallback);
+				if (held != null) {
+					renderFailed = false;
+					controller.onItemUse(held, t);
+				}
+			}
+			useWasDown = useDown;
 			RollSession s = controller.current(t);
 			if (s == null) {
 				renderer.reset();
