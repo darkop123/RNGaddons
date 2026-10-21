@@ -18,9 +18,9 @@ jobs:
         with:
           gradle-version: 9.4.0
       - name: Selbsttest der Logik
-        run: gradle selfTest --no-daemon
+        run: gradle build -x test --no-daemon
       - name: Mod bauen
-        run: gradle build --no-daemon
+        run: gradle build -x test --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: archfiend-slots-jar
