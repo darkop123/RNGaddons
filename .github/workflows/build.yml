@@ -2,12 +2,14 @@ name: Build mod
 on:
   push:
   workflow_dispatch:
+  # Wenn du auf GitHub ein Release veroeffentlichst, wird die JAR automatisch daran angehaengt.
+  release:
+    types: [published]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: archfiend-slots2/archfiend-slots
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -18,10 +20,15 @@ jobs:
         with:
           gradle-version: 9.4.0
       - name: Selbsttest der Logik
-        run: gradle build -x test --no-daemon
+        run: gradle selfTest --no-daemon
       - name: Mod bauen
         run: gradle build -x test --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: archfiend-slots-jar
-          path: archfiend-slots2/archfiend-slots/build/libs/archfiend-slots-1.0.0.jar
+          name: rngaddons-jar
+          path: build/libs/rngaddons-*.jar
+      - name: JAR an das Release anhaengen
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/libs/rngaddons-*.jar
