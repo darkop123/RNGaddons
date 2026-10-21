@@ -5,6 +5,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: archfiend-slots2/archfiend-slots
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -21,4 +24,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: archfiend-slots-jar
-          path: build/libs/archfiend-slots-1.0.0.jar
+          path: archfiend-slots2/archfiend-slots/build/libs/archfiend-slots-1.0.0.jar
