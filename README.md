@@ -26,10 +26,10 @@ Hinweis nicht. Deine alten Einstellungen werden beim ersten Start automatisch ü
 ## Verifizierungsstatus
 | Punkt | Status |
 |---|---|
-| Logik (Parser, Zustandsautomat, Timeline) | `SelfTest`, 359 Checks |
+| Logik (Parser, Zustandsautomat, Timeline) | `SelfTest`, 352 Checks |
 | Echte Hypixel-Zeilen 1–5, „Nice!“-6, High Class, „You do not have enough coins…“ | in den Tests, im Spiel gesehen |
 | Wortlaut einer echten 7 (Dye) | **noch nicht bestätigt** |
-| Menü (1.1.0) | gegen die offiziellen 26.1.2-Docs geschrieben, im Spiel noch nicht getestet |
+| Menü | im Spiel getestet (1.1.0) |
 
 ## Wie das Ergebnis erkannt wird (Archfiend Dice)
 1. **Start:** Rechtsklick mit einem Würfel (Item-ID `ARCHFIEND_DICE` / `HIGH_CLASS_ARCHFIEND_DICE`) startet die

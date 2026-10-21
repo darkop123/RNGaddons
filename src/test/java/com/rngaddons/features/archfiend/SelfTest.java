@@ -150,7 +150,7 @@ public final class SelfTest {
 		c.onItemUse(DiceType.HIGH_CLASS_ARCHFIEND_DICE, 0);
 		c.onGameMessage("You rolled a 6!", 100);
 		check(c.current(500) != null, "still shown at 0.5 s");
-		check(c.current(100 + 4000) == null, "removed after the animation");
+		check(c.current(100 + 5000) == null, "removed after the animation");
 	}
 
 	static void controllerFromMessage() {
@@ -275,10 +275,9 @@ public final class SelfTest {
 				check(allMatch, "final symbols match result " + r);
 				check(Symbols.isTriple(fin) == (r == 6 || r == 7), "only 6 and 7 are triples (result " + r + ")");
 				long max = s.totalMs();
-				check(max <= 3500, "total <= 3.5 s for result " + r + " was " + max);
 				if (r <= 5) check(max == 3000, "normal result takes 3.0 s, was " + max);
-				if (r == 6) check(max == 3300, "gold 3.3 s, was " + max);
-				if (r == 7) check(max == 3500, "dye 3.5 s, was " + max);
+				// jackpots: last reel at 2.3 s + default celebration 2.5 s
+				if (r >= 6) check(Math.abs(max - 4800) <= 1, "jackpot 2.3 s + 2.5 s celebration, was " + max);
 				check(s.sinceLock(0) < 0, "not locked at start");
 			}
 		}
@@ -337,13 +336,28 @@ public final class SelfTest {
 		}
 		check(!winEvent, "no win event for a normal result");
 
-		// duration setting is clamped so the dye never exceeds 3.5 s
-		RollSession big = new RollSession(8, DiceType.ARCHFIEND_DICE, 0, 99.0, false);
+		// duration and celebration settings are clamped
+		RollSession big = new RollSession(8, DiceType.ARCHFIEND_DICE, 0, 99.0, 99.0, false);
 		big.resolve(7, 10);
-		check(big.totalMs() <= 3500, "huge configured duration is clamped: " + big.totalMs());
+		check(Math.abs(big.reel(2).settleAtMs() - 3833) <= 2, "huge duration clamped to 5 s: " + big.reel(2).settleAtMs());
+		check(big.totalMs() <= 3834 + 6000, "huge celebration clamped to 6 s: " + big.totalMs());
 		RollSession tiny = new RollSession(9, DiceType.ARCHFIEND_DICE, 0, 0.1, false);
 		tiny.resolve(2, 10);
-		check(tiny.totalMs() >= 2000 - 10, "tiny duration clamped to 2 s: " + tiny.totalMs());
+		check(tiny.totalMs() >= 1500 - 10, "tiny duration clamped to 1.5 s: " + tiny.totalMs());
+		// the duration setting changes when the reels stop: 2 s vs 3 s
+		RollSession two = new RollSession(11, DiceType.ARCHFIEND_DICE, 0, 2.0, false);
+		two.resolve(4, 10);
+		check(Math.abs(two.reel(2).settleAtMs() - 1533) <= 2, "2 s setting: last reel at ~1.53 s: " + two.reel(2).settleAtMs());
+		// celebration length setting
+		RollSession longDye = new RollSession(12, DiceType.ARCHFIEND_DICE, 0, 3.0, 4.0, false);
+		longDye.resolve(7, 10);
+		check(Math.abs(longDye.totalMs() - 6300) <= 1, "dye with 4 s celebration: " + longDye.totalMs());
+		RollSession shortDye = new RollSession(13, DiceType.ARCHFIEND_DICE, 0, 3.0, 1.0, false);
+		shortDye.resolve(7, 10);
+		check(shortDye.totalMs() - shortDye.reel(2).settleAtMs() >= 1000, "dye keeps >= 1 s for its titles");
+		RollSession normalLong = new RollSession(14, DiceType.ARCHFIEND_DICE, 0, 3.0, 6.0, false);
+		normalLong.resolve(3, 10);
+		check(normalLong.totalMs() == 3000, "celebration setting does not lengthen normal results");
 
 		// every strip contains all symbols (the forced final cell is the only thing that matters, but be sure)
 		Set<Integer> seen = new HashSet<>();
@@ -369,7 +383,13 @@ public final class SelfTest {
 		s.extraResultPatterns = null;
 		s.extraRejectPatterns = null;
 		s.sanitize();
-		check(s.durationSeconds == 3.0 && s.overlayScale == 0.5 && s.soundVolume == 1.0 && s.resultTimeoutMs == 2000, "sanitize clamps");
+		check(s.durationSeconds == 5.0 && s.overlayScale == 0.5 && s.soundVolume == 1.0 && s.resultTimeoutMs == 2000, "sanitize clamps");
+		s.jackpotSeconds = 0.1;
+		s.sanitize();
+		check(s.jackpotSeconds == 1.0, "jackpot length clamped up");
+		s.jackpotSeconds = Double.NaN;
+		s.sanitize();
+		check(s.jackpotSeconds == 2.5, "NaN jackpot length repaired");
 		check(s.extraResultPatterns != null && s.extraRejectPatterns != null, "sanitize repairs null lists");
 		s.durationSeconds = Double.NaN;
 		s.sanitize();

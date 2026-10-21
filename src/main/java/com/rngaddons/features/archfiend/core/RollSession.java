@@ -17,6 +17,11 @@ import com.rngaddons.features.archfiend.render.Symbols;
 public final class RollSession {
 	public enum Kind { NORMAL, GOLD, DYE, UNKNOWN }
 
+	public static final double MIN_DURATION_S = 1.5;
+	public static final double MAX_DURATION_S = 5.0;
+	public static final double MIN_JACKPOT_S = 1.0;
+	public static final double MAX_JACKPOT_S = 6.0;
+	public static final double DEFAULT_JACKPOT_S = 2.5;
 	public static final long DECEL_MS = 450;
 	public static final long INTRO_MS = 200;
 	public static final long FADE_OUT_MS = 250;
@@ -52,17 +57,23 @@ public final class RollSession {
 	// event queue
 	private final long[] evTime = new long[6];
 	private final int[] evCode = new int[6];
+	private final long jackpotMs;
 	private int evCount;
 	private int evNext;
 	private boolean startEmitted;
 	private long lastTickRel = Long.MIN_VALUE;
 
 	public RollSession(long id, DiceType dice, long startMs, double durationSeconds, boolean demo) {
+		this(id, dice, startMs, durationSeconds, DEFAULT_JACKPOT_S, demo);
+	}
+
+	public RollSession(long id, DiceType dice, long startMs, double durationSeconds, double jackpotSeconds, boolean demo) {
 		this.id = id;
 		this.dice = dice;
 		this.startMs = startMs;
 		this.demo = demo;
-		this.baseMs = Math.round(Math.max(2.0, Math.min(3.0, durationSeconds)) * 1000.0);
+		this.baseMs = Math.round(clamp(durationSeconds, MIN_DURATION_S, MAX_DURATION_S, 3.0) * 1000.0);
+		this.jackpotMs = Math.round(clamp(jackpotSeconds, MIN_JACKPOT_S, MAX_JACKPOT_S, DEFAULT_JACKPOT_S) * 1000.0);
 		// Cosmetic strips: different symbol order per reel, every symbol present.
 		int[] steps = {3, 4, 7};
 		for (int r = 0; r < 3; r++) {
@@ -107,8 +118,8 @@ public final class RollSession {
 		lockRel = reels[2].settleAtMs();
 		long present = Math.max(500, baseMs - Math.round(STOP_FRACTION[2] * baseMs));
 		switch (kind()) {
-			case GOLD -> present += 300;
-			case DYE -> present += 500;
+			case GOLD -> present = Math.max(present, jackpotMs);
+			case DYE -> present = Math.max(present, Math.max(1000, jackpotMs)); // titles need ~0.85 s
 			case UNKNOWN -> present = Math.max(present, 900);
 			default -> { }
 		}
@@ -208,5 +219,10 @@ public final class RollSession {
 			return EV_TICK;
 		}
 		return EV_NONE;
+	}
+
+	private static double clamp(double v, double lo, double hi, double fallback) {
+		if (v != v) return fallback;
+		return Math.max(lo, Math.min(hi, v));
 	}
 }

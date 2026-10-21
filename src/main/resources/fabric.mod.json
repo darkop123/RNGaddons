@@ -5,12 +5,12 @@
 	"name": "RNGaddons",
 	"description": "Hypixel SkyBlock's RNG based grinds made more enjoyable. Archfiend Dice: casino slot machine instead of the dice roll. Client-side and purely cosmetic; never changes game mechanics.",
 	"authors": [
-		"darkop123"
+		"Chris_t0pf"
 	],
 	"contact": {
-		"homepage": "https://github.com/darkop123/RNGaddons",
-		"sources": "https://github.com/darkop123/RNGaddons",
-		"issues": "https://github.com/darkop123/RNGaddons/issues"
+		"homepage": "https://github.com/Christ0pf/RNGaddons",
+		"sources": "https://github.com/Christ0pf/RNGaddons",
+		"issues": "https://github.com/Christ0pf/RNGaddons/issues"
 	},
 	"license": "MIT",
 	"icon": "assets/rngaddons/icon.png",

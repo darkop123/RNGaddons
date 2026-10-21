@@ -104,11 +104,15 @@ public final class ConfigScreen extends Screen {
 					s.archfiendDiceEnabled, v -> s.archfiendDiceEnabled = v);
 				toggle(2, "High Class Archfiend Dice", "Use it for the High Class dice.",
 					s.highClassArchfiendDiceEnabled, v -> s.highClassArchfiendDiceEnabled = v);
-				stepper(3, "Animation length", "Spin time of a normal roll.",
+				stepper(3, "Spin time", "How long the reels spin (1.5 - 5 s).",
 					String.format(Locale.ROOT, "%.2f s", s.durationSeconds),
 					() -> s.durationSeconds = round(s.durationSeconds - 0.25, 100),
 					() -> s.durationSeconds = round(s.durationSeconds + 0.25, 100));
-				stepper(4, "Overlay size", "Size of the slot machine.",
+				stepper(4, "Jackpot celebration", "How long a 6 or 7 stays on screen.",
+					String.format(Locale.ROOT, "%.1f s", s.jackpotSeconds),
+					() -> s.jackpotSeconds = round(s.jackpotSeconds - 0.5, 10),
+					() -> s.jackpotSeconds = round(s.jackpotSeconds + 0.5, 10));
+				stepper(5, "Overlay size", "Size of the slot machine.",
 					String.format(Locale.ROOT, "%.1fx", s.overlayScale),
 					() -> s.overlayScale = round(s.overlayScale - 0.1, 10),
 					() -> s.overlayScale = round(s.overlayScale + 0.1, 10));
@@ -252,7 +256,8 @@ public final class ConfigScreen extends Screen {
 			String version = FabricLoader.getInstance().getModContainer(RNGaddonsClient.MOD_ID)
 				.map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("");
 			g.text(font, RNGaddonsClient.NAME, px + 8, py + 8, C_ACCENT, true);
-			g.text(font, "v" + version, px + 12 + font.width(RNGaddonsClient.NAME), py + 8, C_DESC, false);
+			String sub = "v" + version + "  by " + RNGaddonsClient.AUTHOR;
+			g.text(font, sub, px + 12 + font.width(RNGaddonsClient.NAME), py + 8, C_DESC, false);
 			String hint = "/" + RNGaddonsClient.MOD_ID;
 			g.text(font, hint, px + pw - 8 - font.width(hint), py + 8, C_DESC, false);
 			// sidebar with section headings

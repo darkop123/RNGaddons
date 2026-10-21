@@ -60,7 +60,7 @@ public final class RollController {
 			log.accept("Dice use ignored: guard period, " + (lockoutUntilMs - now) + " ms left");
 			return false;
 		}
-		current = new RollSession(nextId++, type, now, settings.durationSeconds, false);
+		current = new RollSession(nextId++, type, now, settings.durationSeconds, settings.jackpotSeconds, false);
 		log.accept("Roll #" + current.id + " started (" + type + "), waiting for the server message");
 		return true;
 	}
@@ -69,7 +69,7 @@ public final class RollController {
 	public boolean startDemo(DiceType type, int result, long now) {
 		tick(now);
 		if (current != null) return false;
-		RollSession s = new RollSession(nextId++, type, now, settings.durationSeconds, true);
+		RollSession s = new RollSession(nextId++, type, now, settings.durationSeconds, settings.jackpotSeconds, true);
 		s.resolve(result, now);
 		current = s;
 		return true;
@@ -123,7 +123,7 @@ public final class RollController {
 		if (!settings.isEnabledFor(type)) return Outcome.IGNORED;
 		int r = parser.parseResult(text);
 		if (r < 1 || r > 7) return Outcome.IGNORED;
-		RollSession ns = new RollSession(nextId++, type, now, settings.durationSeconds, false);
+		RollSession ns = new RollSession(nextId++, type, now, settings.durationSeconds, settings.jackpotSeconds, false);
 		if (!ns.resolve(r, now)) return Outcome.IGNORED;
 		current = ns;
 		log.accept("Roll #" + ns.id + " started from the server message (item use was not seen), result " + r + ": " + text);

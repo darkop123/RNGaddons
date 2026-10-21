@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 public final class RNGaddonsClient implements ClientModInitializer {
 	public static final String MOD_ID = "rngaddons";
 	public static final String NAME = "RNGaddons";
+	public static final String AUTHOR = "Chris_t0pf";
 	static final Logger LOG = LoggerFactory.getLogger(MOD_ID);
 
 	private static RNGaddonsClient instance;

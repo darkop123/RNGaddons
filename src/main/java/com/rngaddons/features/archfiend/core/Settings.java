@@ -9,8 +9,10 @@ import java.util.List;
  */
 public final class Settings {
 	public boolean enabled = true;
-	/** Base duration of a normal roll in seconds (clamped to 2.0 - 3.0, so even a 7 stays <= 3.5 s). */
+	/** Base duration of a normal roll in seconds (1.5 - 5.0). The reels stop at 40 / 60 / 77 % of it. */
 	public double durationSeconds = 3.0;
+	/** How long a jackpot (6 or 7) is celebrated after the last reel stops, in seconds (1.0 - 6.0). */
+	public double jackpotSeconds = 2.5;
 	public boolean soundEnabled = true;
 	/** 0.0 - 1.0 */
 	public double soundVolume = 0.6;
@@ -33,8 +35,10 @@ public final class Settings {
 
 	/** Repairs out-of-range or null values after loading. */
 	public Settings sanitize() {
-		if (!(durationSeconds >= 2.0)) durationSeconds = durationSeconds != durationSeconds ? 3.0 : 2.0;
-		if (durationSeconds > 3.0) durationSeconds = 3.0;
+		if (!(durationSeconds >= RollSession.MIN_DURATION_S)) durationSeconds = durationSeconds != durationSeconds ? 3.0 : RollSession.MIN_DURATION_S;
+		if (durationSeconds > RollSession.MAX_DURATION_S) durationSeconds = RollSession.MAX_DURATION_S;
+		if (!(jackpotSeconds >= RollSession.MIN_JACKPOT_S)) jackpotSeconds = jackpotSeconds != jackpotSeconds ? 2.5 : RollSession.MIN_JACKPOT_S;
+		if (jackpotSeconds > RollSession.MAX_JACKPOT_S) jackpotSeconds = RollSession.MAX_JACKPOT_S;
 		if (!(soundVolume >= 0.0)) soundVolume = soundVolume != soundVolume ? 0.6 : 0.0;
 		if (soundVolume > 1.0) soundVolume = 1.0;
 		if (!(overlayScale >= 0.5)) overlayScale = overlayScale != overlayScale ? 1.0 : 0.5;
