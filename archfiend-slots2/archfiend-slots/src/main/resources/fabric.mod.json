@@ -1,0 +1,23 @@
+{
+	"schemaVersion": 1,
+	"id": "archfiendslots",
+	"version": "${version}",
+	"name": "Archfiend Slots",
+	"description": "Client-side visual replacement for the Archfiend Dice roll animation in Hypixel SkyBlock: a casino-style slot machine overlay. Purely cosmetic; never changes game mechanics.",
+	"authors": [
+		"Archfiend Slots contributors"
+	],
+	"license": "MIT",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.archfiendslots.client.ArchfiendSlotsClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.1",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
