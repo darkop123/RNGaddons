@@ -47,11 +47,21 @@ public final class RollController {
 
 	/** A supported item was used. Returns true if a new animation started. */
 	public boolean onItemUse(DiceType type, long now) {
-		if (!settings.isEnabledFor(type)) return false;
+		if (!settings.isEnabledFor(type)) {
+			log.accept("Dice use ignored: disabled in settings (" + type + ")");
+			return false;
+		}
 		tick(now);
-		if (current != null) return false;
-		if (now < lockoutUntilMs) return false;
+		if (current != null) {
+			log.accept("Dice use ignored: roll #" + current.id + " is still active");
+			return false;
+		}
+		if (now < lockoutUntilMs) {
+			log.accept("Dice use ignored: guard period, " + (lockoutUntilMs - now) + " ms left");
+			return false;
+		}
 		current = new RollSession(nextId++, type, now, settings.durationSeconds, false);
+		log.accept("Roll #" + current.id + " started (" + type + "), waiting for the server message");
 		return true;
 	}
 
@@ -77,6 +87,7 @@ public final class RollController {
 		if (parser.isPlayerChat(text)) return Outcome.IGNORED;
 
 		if (parser.isRejection(text)) {
+			log.accept("Roll #" + s.id + " rejected by the server: " + text);
 			current = null;
 			lastWasTimeout = false;
 			lockoutUntilMs = now + DUPLICATE_GUARD_MS;
@@ -87,7 +98,10 @@ public final class RollController {
 			log.accept("Ambiguous roll message ignored: " + text);
 			return Outcome.AMBIGUOUS;
 		}
-		if (r >= 1 && r <= 7 && s.resolve(r, now)) return Outcome.RESULT;
+		if (r >= 1 && r <= 7 && s.resolve(r, now)) {
+			log.accept("Roll #" + s.id + " result " + r + " confirmed from: " + text);
+			return Outcome.RESULT;
+		}
 		return Outcome.IGNORED;
 	}
 
@@ -99,7 +113,15 @@ public final class RollController {
 			s.timeout(now);
 			log.accept("No roll result detected within " + settings.resultTimeoutMs + " ms; ending neutrally.");
 		}
+		// hard safety net: nothing may ever stay on screen or block new rolls for long
+		if (now - s.startMs > settings.resultTimeoutMs + 10_000L) {
+			log.accept("Roll #" + s.id + " dropped by safety net");
+			current = null;
+			lockoutUntilMs = Long.MIN_VALUE;
+			return;
+		}
 		if (s.isFinished(now)) {
+			log.accept("Roll #" + s.id + " finished" + (s.isTimedOut() ? " (no result detected)" : ""));
 			lastWasTimeout = s.isTimedOut();
 			lockoutUntilMs = now + (lastWasTimeout ? LATE_GUARD_MS : DUPLICATE_GUARD_MS);
 			current = null;
@@ -111,6 +133,16 @@ public final class RollController {
 		current = null;
 		lockoutUntilMs = Long.MIN_VALUE;
 		lastWasTimeout = false;
+	}
+
+	/** One-line state description for /archfiendslots status. */
+	public String describe(long now) {
+		RollSession s = current;
+		String cur = s == null ? "no active roll"
+			: "roll #" + s.id + (s.demo ? " (demo)" : "") + (s.isResolved() ? " result=" + s.result() : " waiting for result");
+		long guard = Math.max(0, lockoutUntilMs == Long.MIN_VALUE ? 0 : lockoutUntilMs - now);
+		return cur + ", guard " + guard + " ms, enabled=" + settings.enabled
+			+ ", standard=" + settings.archfiendDiceEnabled + ", highClass=" + settings.highClassArchfiendDiceEnabled;
 	}
 
 	public boolean wasLastTimeout() { return lastWasTimeout; }

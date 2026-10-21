@@ -40,7 +40,8 @@ public final class RollResultParser {
 	private static final String[] DEFAULT_REJECT = {
 		"\\bnot\\s+enough\\s+coins\\b",
 		"\\bdon'?t\\s+have\\s+enough\\b",
-		"\\b(?:can'?t|cannot)\\s+afford\\b",
+		"\\b(?:do\\s+not|does\\s+not|did\\s+not)\\s+have\\s+enough\\b",
+		"\\bnot\\s+have\\s+enough\\b",		"\\b(?:can'?t|cannot)\\s+afford\\b",
 		"\\bon\\s+cooldown\\b",
 		"\\bcooldown\\b.*\\b(?:wait|remaining|seconds)\\b",
 		"\\bcan(?:'|no)?t\\s+use\\s+this\\b",
