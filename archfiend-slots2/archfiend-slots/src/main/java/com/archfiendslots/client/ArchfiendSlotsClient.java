@@ -86,6 +86,12 @@ public final class ArchfiendSlotsClient implements ClientModInitializer {
 				.then(ClientCommands.literal("capture")
 					.then(ClientCommands.argument("on", BoolArgumentType.bool())
 						.executes(ctx -> capture(ctx.getSource()::sendFeedback, BoolArgumentType.getBool(ctx, "on")))))
+				.then(ClientCommands.literal("status")
+					.executes(ctx -> {
+						ctx.getSource().sendFeedback(Component.literal("Archfiend Slots: " + controller.describe(now())
+							+ ", renderFailed=" + renderFailed));
+						return 1;
+					}))
 				.then(ClientCommands.literal("reload")
 					.executes(ctx -> reload(ctx.getSource()::sendFeedback)))));
 
@@ -100,7 +106,10 @@ public final class ArchfiendSlotsClient implements ClientModInitializer {
 			// The event is global; in singleplayer it also fires for the server-side player. Only react to ours.
 			if (player != mc.player) return InteractionResult.PASS;
 			DiceType type = DiceDetector.detect(player.getItemInHand(hand), controller.settings().allowNameFallback);
-			if (type != null) controller.onItemUse(type, now());
+			if (type != null) {
+				renderFailed = false; // a rendering error must never disable the overlay for good
+				controller.onItemUse(type, now());
+			}
 		} catch (Throwable t) {
 			LOG.warn("Ignoring item use after error: {}", t.toString());
 		}
@@ -139,8 +148,8 @@ public final class ArchfiendSlotsClient implements ClientModInitializer {
 		try {
 			renderer.render(gfx, s, t, controller.settings());
 		} catch (Throwable e) {
-			renderFailed = true; // never spam errors or leave a half-drawn overlay
-			LOG.error("Overlay rendering failed; disabling it for this session.", e);
+			renderFailed = true; // stop drawing this roll; re-enabled by the next dice use
+			LOG.error("Overlay rendering failed; this roll is cancelled.", e);
 			controller.cancelAll();
 		} finally {
 			gfx.end();
