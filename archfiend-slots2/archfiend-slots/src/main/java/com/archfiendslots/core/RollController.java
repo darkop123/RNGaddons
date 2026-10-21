@@ -79,7 +79,8 @@ public final class RollController {
 	public Outcome onGameMessage(String rawText, long now) {
 		tick(now);
 		RollSession s = current;
-		if (s == null || s.demo || s.isResolved()) return Outcome.IGNORED;
+		if (s == null) return startFromMessage(rawText, now);
+		if (s.demo || s.isResolved()) return Outcome.IGNORED;
 
 		String text = RollResultParser.normalize(rawText);
 		if (text.isEmpty()) return Outcome.IGNORED;
@@ -103,6 +104,30 @@ public final class RollController {
 			return Outcome.RESULT;
 		}
 		return Outcome.IGNORED;
+	}
+
+	/**
+	 * Fallback when the item use was not seen (another mod swallowed the click, item data missing, ...):
+	 * a server line that explicitly names the dice ("Your Archfiend Dice rolled a 4! ...") is itself a
+	 * confirmed result, so the animation starts from it. Still never from player chat, never during a
+	 * guard period, and only for lines naming the dice and carrying exactly one result.
+	 */
+	private Outcome startFromMessage(String rawText, long now) {
+		if (now < lockoutUntilMs) return Outcome.IGNORED;
+		String text = RollResultParser.normalize(rawText);
+		if (text.isEmpty() || parser.isPlayerChat(text)) return Outcome.IGNORED;
+		String low = text.toLowerCase(java.util.Locale.ROOT);
+		if (!low.contains("archfiend dice")) return Outcome.IGNORED;
+		if (parser.isRejection(text)) return Outcome.IGNORED;
+		DiceType type = low.contains("high class") ? DiceType.HIGH_CLASS_ARCHFIEND_DICE : DiceType.ARCHFIEND_DICE;
+		if (!settings.isEnabledFor(type)) return Outcome.IGNORED;
+		int r = parser.parseResult(text);
+		if (r < 1 || r > 7) return Outcome.IGNORED;
+		RollSession ns = new RollSession(nextId++, type, now, settings.durationSeconds, false);
+		if (!ns.resolve(r, now)) return Outcome.IGNORED;
+		current = ns;
+		log.accept("Roll #" + ns.id + " started from the server message (item use was not seen), result " + r + ": " + text);
+		return Outcome.RESULT;
 	}
 
 	/** Timeouts and cleanup. Safe to call as often as you like. */
