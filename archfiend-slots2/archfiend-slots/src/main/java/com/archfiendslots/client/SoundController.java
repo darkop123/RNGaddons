@@ -37,9 +37,9 @@ final class SoundController {
 		}
 	}
 
-	// Both overloads exist because some SoundEvents constants are Holder<SoundEvent> and others plain SoundEvent.
+	// forUI takes a plain SoundEvent in 26.1; some SoundEvents constants are Holder<SoundEvent>, so unwrap those.
 	private static void play(Holder<SoundEvent> sound, float pitch, float volume) {
-		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound, pitch, volume));
+		play(sound.value(), pitch, volume);
 	}
 
 	private static void play(SoundEvent sound, float pitch, float volume) {
